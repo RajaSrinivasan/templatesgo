@@ -13,7 +13,7 @@ var cfgfile string
 
 var serverURL = "localhost"
 
-var cfgFilename = "/val/server/etc/server.yaml"
+var cfgFilename = "/var/server/etc/server.yaml"
 var serverCertFileName = "/var/server/etc/servercert"
 var pvtKeyFileName = "/var/server/etc/privatekey"
 var htmlPath = "/var/server/etc/html"
