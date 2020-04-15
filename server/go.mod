@@ -1,4 +1,4 @@
-module gitlab.com/RajaSrinivasan/projtemplates/go/server
+module gitlab.com/projtemplates/go/server
 
 go 1.13
 

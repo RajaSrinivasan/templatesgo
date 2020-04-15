@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"gitlab.com/RajaSrinivasan/projtemplates/go/server/install"
+	"gitlab.com/projtemplates/go/server/install"
 )
 
 var installCmd = &cobra.Command{
