@@ -29,6 +29,14 @@ var rootCmd = &cobra.Command{
 	Run: Server,
 }
 
+func showConfiguration() {
+	log.Printf("Config filename %s", cfgFilename)
+	log.Printf("Server URL %s port %s", serverURL, serverPort)
+	log.Printf("Cert file %s. Private Key file %s", serverCertFileName, pvtKeyFileName)
+	log.Printf("HTML path %s", htmlPath)
+	log.Printf("Log files path %s", logFilesPath)
+}
+
 // Server provides the service ie runs as a daemon.
 func Server(cmd *cobra.Command, args []string) {
 	log.Println("Starting the service")
@@ -63,9 +71,12 @@ func initConfig() {
 		log.Printf("Server URL set to %s", serverURL)
 
 		serverURL = serverURL + ":" + serverPort
-		serverCertFileName = viper.GetString("server.certfile")
-		pvtKeyFileName = viper.GetString("server.privatekey")
-		htmlPath = viper.GetString("server.htmlpath")
-
+		serverCertFileName = viper.GetString("server.cert")
+		pvtKeyFileName = viper.GetString("server.pvtkey")
+		htmlPath = viper.GetString("server.html")
+		logFilesPath = viper.GetString("server.logfiles")
+	}
+	if verbosityLevel > 0 {
+		showConfiguration()
 	}
 }
