@@ -3,22 +3,28 @@ package cmd
 import (
 	"log"
 	"os"
+	"path"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	homedir "github.com/mitchellh/go-homedir"
+	"gitlab.com/projtemplates/go/server/https/serve"
 )
 
 var verbosityLevel int
 var cfgfile string
 
 var serverURL = "localhost"
-
-var cfgFilename = "/var/server/etc/server.yaml"
-var serverCertFileName = "/var/server/etc/servercert"
-var pvtKeyFileName = "/var/server/etc/privatekey"
-var htmlPath = "/var/server/etc/html"
-var logFilesPath = "/var/server/log"
 var serverPort = "443"
+
+var serverDir string
+var cfgFilename string
+
+var serverCertFileName string
+var pvtKeyFileName string
+var htmlPath string
+var logFilesPath string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -40,6 +46,26 @@ func showConfiguration() {
 // Server provides the service ie runs as a daemon.
 func Server(cmd *cobra.Command, args []string) {
 	log.Println("Starting the service")
+
+	viper.SetConfigFile(cfgFilename)
+
+	if err := viper.ReadInConfig(); err == nil {
+		log.Println("Using config file:", viper.ConfigFileUsed())
+		serverURL = viper.GetString("server.url")
+		serverPort := viper.GetString("server.port")
+		log.Printf("Server URL set to %s", serverURL)
+
+		serverURL = serverURL + ":" + serverPort
+		serverCertFileName = viper.GetString("server.cert")
+		pvtKeyFileName = viper.GetString("server.pvtkey")
+		htmlPath = viper.GetString("server.html")
+		logFilesPath = viper.GetString("server.logfiles")
+	}
+	if verbosityLevel > 0 {
+		showConfiguration()
+	}
+	serve.ProvideService(serverCertFileName, pvtKeyFileName, serverURL, htmlPath)
+
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -59,24 +85,18 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	home, err := homedir.Dir()
+	if err == nil {
+
+		serverDir = path.Join(home, "server")
+
+		cfgFilename = path.Join(serverDir, "etc", "server.yaml")
+		htmlPath = path.Join(serverDir, "html")
+		logFilesPath = path.Join(serverDir, "log")
+	}
+
 	if cfgfile != "" {
 		cfgFilename = cfgfile
 	}
-	viper.SetConfigFile(cfgFilename)
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		log.Println("Using config file:", viper.ConfigFileUsed())
-		serverURL = viper.GetString("server.url")
-		serverPort := viper.GetString("server.port")
-		log.Printf("Server URL set to %s", serverURL)
 
-		serverURL = serverURL + ":" + serverPort
-		serverCertFileName = viper.GetString("server.cert")
-		pvtKeyFileName = viper.GetString("server.pvtkey")
-		htmlPath = viper.GetString("server.html")
-		logFilesPath = viper.GetString("server.logfiles")
-	}
-	if verbosityLevel > 0 {
-		showConfiguration()
-	}
 }

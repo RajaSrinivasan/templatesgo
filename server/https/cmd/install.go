@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"log"
+	"os"
+	"path"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,12 +24,35 @@ func init() {
 }
 
 func Install(cmd *cobra.Command, args []string) {
-	cfgFilename = install.Ask("Configuration File Name", cfgFilename)
 
-	serverCertFileName = install.Ask("Certificate file Name", serverCertFileName)
+	serverDir = install.Ask("Server directory", serverDir)
+	err := os.MkdirAll(serverDir, os.ModePerm)
+	if err != nil {
+		log.Fatal("Creating Dir", err)
+	}
+	viper.Set("server.toplevel", serverDir)
+
+	err = os.MkdirAll(path.Join(serverDir, "etc"), os.ModePerm)
+	if err != nil {
+		log.Fatal("Creating etc dir", err)
+	}
+
+	err = os.MkdirAll(path.Join(serverDir, "log"), os.ModePerm)
+	if err != nil {
+		log.Fatal("Creating log dir", err)
+	}
+
+	err = os.MkdirAll(path.Join(serverDir, "html"), os.ModePerm)
+	if err != nil {
+		log.Fatal("Creating html dir", err)
+	}
+
+	cfgFilename = path.Join(serverDir, "etc", "server.yaml")
+
+	serverCertFileName = path.Join(serverDir, "etc", "certfile")
 	viper.Set("server.cert", serverCertFileName)
 
-	pvtKeyFileName = install.Ask("Private Key filename", pvtKeyFileName)
+	pvtKeyFileName = path.Join(serverDir, "etc", "keypair")
 	viper.Set("server.pvtkey", pvtKeyFileName)
 
 	serverPort = install.Ask("Server Port", serverPort)
@@ -36,17 +61,18 @@ func Install(cmd *cobra.Command, args []string) {
 	serverURL = install.Ask("Server URL", serverURL)
 	viper.Set("server.URL", serverURL)
 
-	serverURL = serverURL + ":" + serverPort
-
-	htmlPath = install.Ask("HTML Path", htmlPath)
+	htmlPath = path.Join(serverDir, "html")
 	viper.Set("server.html", htmlPath)
 
-	logFilesPath = install.Ask("Log Files Path", logFilesPath)
-	viper.Set("server.logfiles", htmlPath)
+	logFilesPath = path.Join(serverDir, "log")
+	viper.Set("server.logfiles", logFilesPath)
 
-	err := viper.SafeWriteConfigAs(cfgFilename)
+	err = viper.SafeWriteConfigAs(cfgFilename)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("Saved Configuration file %s", cfgFilename)
+	install.GeneratePrivateKeypair(pvtKeyFileName)
+	privatepemname := pvtKeyFileName + ".pvt.pem"
+	install.CreateCert(privatepemname, serverCertFileName)
 }
