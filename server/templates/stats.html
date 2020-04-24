@@ -7,6 +7,13 @@
 <h1>Hostname {{ .hostname }}</h1>
 <p>Started at {{ .time_start }}</p>
 <p>Time now {{ .time_now }} </p>
+<h2>Software Version</h2>
+
+<p>Build Time : {{ .build_time }}</p>
+<p>Version : {{ .major }}.{{.minor }}.{{.build}}</p>
+<p>Repository : {{.repo}} Branch : {{ .branch }} </p>
+<p>Commit Id : {{.short_commit}} Full {{ .long_commit }}</p>
+
 
 <!--Embed the footer.html template at this location-->
 {{ template "footer.html" .}}

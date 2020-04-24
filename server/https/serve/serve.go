@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gitlab.com/projtemplates/go/server/version"
 )
 
 var startTime string
@@ -20,10 +21,18 @@ func getStats(c *gin.Context) {
 		http.StatusOK,
 		"stats.html",
 		gin.H{
-			"title":      "Server Stats",
-			"hostname":   hostname,
-			"time_start": startTime,
-			"time_now":   timenow},
+			"title":        "Server Stats",
+			"hostname":     hostname,
+			"time_start":   startTime,
+			"time_now":     timenow,
+			"build_time":   version.BuildTime,
+			"major":        version.VersionMajor,
+			"minor":        version.VersionMinor,
+			"build":        version.VersionBuild,
+			"repo":         version.RepoURL,
+			"branch":       version.BranchName,
+			"short_commit": version.ShortCommitId,
+			"long_commit":  version.LongCommitId},
 	)
 }
 

@@ -32,7 +32,8 @@ var rootCmd = &cobra.Command{
 	Short: "Server Template",
 	Long: `
 	Generic TLS server `,
-	Run: Server,
+	Version: "0.3-0",
+	Run:     Server,
 }
 
 func showConfiguration() {
