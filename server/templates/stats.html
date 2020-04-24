@@ -1,0 +1,12 @@
+<!--index.html-->
+
+<!--Embed the header.html template at this location-->
+{{ template "header.html" .}}
+
+<title>{{ .title }}</title>
+<h1>Hostname {{ .hostname }}</h1>
+<p>Started at {{ .time_start }}</p>
+<p>Time now {{ .time_now }} </p>
+
+<!--Embed the footer.html template at this location-->
+{{ template "footer.html" .}}
