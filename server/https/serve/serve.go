@@ -14,15 +14,25 @@ var startTime string
 func getStats(c *gin.Context) {
 	timenow := time.Now().Format(time.ANSIC)
 	hostname, _ := os.Hostname()
-	c.String(http.StatusOK, "Hostname : %s\nStarted %s\nTime Now %s\n", hostname, startTime, timenow)
+	//c.String(http.StatusOK, "Hostname : %s\nStarted %s\nTime Now %s\n", hostname, startTime, timenow)
+
+	c.HTML(
+		http.StatusOK,
+		"stats.html",
+		gin.H{
+			"title":      "Server Stats",
+			"hostname":   hostname,
+			"time_start": startTime,
+			"time_now":   timenow},
+	)
 }
 
 func getTop(c *gin.Context) {
 	c.HTML(
 		http.StatusOK,
-		"login.html",
+		"index.html",
 		gin.H{
-			"title": "Home Page",
+			"title": "TOPR LLC.",
 		},
 	)
 
