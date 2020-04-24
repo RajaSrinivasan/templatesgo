@@ -32,7 +32,7 @@ var rootCmd = &cobra.Command{
 	Short: "Server Template",
 	Long: `
 	Generic TLS server `,
-	Version: "0.3-0",
+	Version: "0.1-0",
 	Run:     Server,
 }
 
