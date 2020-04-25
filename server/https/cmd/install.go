@@ -92,7 +92,7 @@ func Install(cmd *cobra.Command, args []string) {
 			log.Fatal("Creating html dir ", err)
 		}
 	}
-	installHTMLFiles(htmlDir)
+
 	cfgFilename = path.Join(serverDir, "etc", "server.yaml")
 
 	serverCertFileName = path.Join(serverDir, "etc", "certfile")
@@ -123,4 +123,5 @@ func Install(cmd *cobra.Command, args []string) {
 	privatepemname := pvtKeyFileName + ".pvt.pem"
 	install.CreateCert(privatepemname, serverCertFileName)
 
+	installHTMLFiles(htmlPath)
 }
