@@ -119,9 +119,10 @@ func Install(cmd *cobra.Command, args []string) {
 	}
 	log.Printf("Saved Configuration file %s", cfgFilename)
 
+	log.Printf("Generating certificates")
 	install.GeneratePrivateKeypair(pvtKeyFileName)
 	privatepemname := pvtKeyFileName + ".pvt.pem"
 	install.CreateCert(privatepemname, serverCertFileName)
-
+	log.Printf("Setting up website")
 	installHTMLFiles(htmlPath)
 }
