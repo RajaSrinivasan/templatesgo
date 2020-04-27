@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/mux"
 	"gitlab.com/projtemplates/go/server/version"
 )
 
@@ -47,8 +48,8 @@ func getTop(c *gin.Context) {
 
 }
 
-func ProvideService(certfn, pvtkeyfn, hostnport string, htmlpath string) {
-	log.Printf("Providing Service HTTPS")
+func ProvideGinService(certfn, pvtkeyfn, hostnport string, htmlpath string) {
+	log.Printf("Providing Service using gin HTTPS")
 	startTime = time.Now().Format(time.ANSIC)
 	r := gin.Default()
 	r.LoadHTMLGlob(htmlpath + "/*")
@@ -56,5 +57,30 @@ func ProvideService(certfn, pvtkeyfn, hostnport string, htmlpath string) {
 	r.GET("/stats", getStats)
 	privatekeyfile := pvtkeyfn + ".pvt.pem"
 	r.RunTLS(hostnport, certfn, privatekeyfile)
+}
 
+func getGorillaStats(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Stats"))
+}
+
+func getGorillaTop(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("index"))
+}
+
+func ProvideService(certfn, pvtkeyfn, hostnport string, htmlpath string) {
+	log.Printf("Providing Service using gorilla mux HTTPS")
+	startTime = time.Now().Format(time.ANSIC)
+
+	r := mux.NewRouter()
+	r.HandleFunc("/", getGorillaTop)
+	r.HandleFunc("/stats", getGorillaStats)
+
+	http.Handle("/", r)
+
+	err := http.ListenAndServeTLS(
+		hostnport,
+		certfn,
+		pvtkeyfn+".pvt.pem",
+		r)
+	log.Fatal(err)
 }
