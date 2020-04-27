@@ -24,14 +24,12 @@ type Stats struct {
 	Hostname    string
 	TimeStart   string
 	TimeNow     string
-	BuilTTime   string
+	BuildTime   string
 	Repo        string
 	Branch      string
 	ShortCommit string
 	LongCommit  string
-
-	BuildTime string
-	Version   string
+	Version     string
 }
 
 func getGorillaStats(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +45,7 @@ func getGorillaStats(w http.ResponseWriter, r *http.Request) {
 		TimeStart:   startTime,
 		TimeNow:     timenow,
 		Hostname:    hostname,
-		BuilTTime:   version.BuildTime,
+		BuildTime:   version.BuildTime,
 		Branch:      version.BranchName,
 		Version:     fmt.Sprintf("%d.%d.%d", version.VersionMajor, version.VersionMinor, version.VersionBuild),
 		Repo:        version.RepoURL,
