@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"time"
 
 	"github.com/kardianos/osext"
 	"github.com/spf13/cobra"
@@ -72,6 +73,8 @@ func Install(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal("Creating Dir", err)
 	}
+
+	viper.Set("server.installed", time.Now().Format(time.ANSIC))
 	viper.Set("server.toplevel", serverDir)
 
 	err = os.MkdirAll(path.Join(serverDir, "etc"), os.ModePerm)
@@ -112,6 +115,13 @@ func Install(cmd *cobra.Command, args []string) {
 
 	logFilesPath = path.Join(serverDir, "log")
 	viper.Set("server.logfiles", logFilesPath)
+
+	adminpwd := install.Ask("Admin Password (username: admin)", "admin")
+	userpwd := install.Ask("User Password (username: user)", "user")
+	adminpwdenc := install.Password("admin", adminpwd)
+	viper.Set("users.admin", adminpwdenc)
+	userpwdenc := install.Password("user", userpwd)
+	viper.Set("users.user", userpwdenc)
 
 	err = viper.SafeWriteConfigAs(cfgFilename)
 	if err != nil {
