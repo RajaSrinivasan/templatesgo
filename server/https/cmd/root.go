@@ -10,6 +10,7 @@ import (
 
 	homedir "github.com/mitchellh/go-homedir"
 	"gitlab.com/projtemplates/go/server/https/serve"
+	"gitlab.com/projtemplates/go/server/install"
 )
 
 var verbosityLevel int
@@ -61,6 +62,8 @@ func Server(cmd *cobra.Command, args []string) {
 		pvtKeyFileName = viper.GetString("server.pvtkey")
 		htmlPath = viper.GetString("server.html")
 		logFilesPath = viper.GetString("server.logfiles")
+		install.InstallDate = viper.GetString("server.installed")
+
 	}
 	if verbosityLevel > 0 {
 		showConfiguration()
@@ -94,6 +97,7 @@ func initConfig() {
 		cfgFilename = path.Join(serverDir, "etc", "server.yaml")
 		htmlPath = path.Join(serverDir, "html")
 		logFilesPath = path.Join(serverDir, "log")
+
 	}
 
 	if cfgfile != "" {

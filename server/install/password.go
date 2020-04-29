@@ -10,10 +10,12 @@ import (
 	"github.com/RajaSrinivasan/rollpwd/salt"
 )
 
-func generate(t time.Time, nm string, pwd string, s []byte) string {
+func generate(t time.Time, nm string, pwd string) string {
+
 	layout := "2006-01-02 15"
 	ts := t.Format(layout)
-	salt := string(s)
+	usersalt := salt.Generate(nm)
+	salt := string(usersalt)
 	h := md5.New()
 	io.WriteString(h, salt)
 	io.WriteString(h, ts)
@@ -24,15 +26,13 @@ func generate(t time.Time, nm string, pwd string, s []byte) string {
 	return pwdstr
 }
 
-func Password(nm, pwd string) string {
-	usersalt := salt.Generate(nm)
-	userpwd := generate(time.Now(), nm, pwd, usersalt)
+func Password(nm, pwd string, insttime time.Time) string {
+	userpwd := generate(insttime, nm, pwd)
 	return userpwd
 }
 
 func Verify(nm, pwd string, pwdexp string, instime time.Time) bool {
-	usersalt := salt.Generate(nm)
-	pwdenc := generate(instime, nm, pwd, usersalt)
+	pwdenc := generate(instime, nm, pwd)
 	// fmt.Printf("User %s Password %s\n", nm, pwdenc)
 	if strings.Compare(pwdenc, pwdexp) != 0 {
 		return false
