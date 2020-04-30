@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"io"
 	"io/ioutil"
 	"log"
@@ -123,6 +125,12 @@ func Install(cmd *cobra.Command, args []string) {
 	userpwdenc := install.Password("user", userpwd, insttime)
 	viper.Set("users.user", userpwdenc)
 
+	storekey := make([]byte, install.StoreKeyLength)
+	_, err = rand.Read(storekey)
+	if err != nil {
+		log.Fatal(err)
+	}
+	viper.Set("store.key", hex.EncodeToString(storekey))
 	err = viper.SafeWriteConfigAs(cfgFilename)
 	if err != nil {
 		log.Fatal(err)

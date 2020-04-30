@@ -14,6 +14,9 @@ import (
 )
 
 var InstallDate string
+var StoreKey []byte
+
+const StoreKeyLength = 128
 
 func makeTemplate() x509.Certificate {
 

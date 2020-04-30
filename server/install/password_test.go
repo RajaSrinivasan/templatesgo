@@ -14,6 +14,10 @@ func TestGenerate(t *testing.T) {
 	fmt.Printf("Admin password %s\n", ap)
 	ap = Password("user", "user", time.Now())
 	fmt.Printf("User password %s\n", ap)
+
+	basis2, _ := time.Parse(time.ANSIC, "Thu Apr 30 16:07:04 2020")
+	ap = Password("admin", "admin", basis2)
+	fmt.Printf("Admin Password %s\n", ap)
 }
 
 func TestVerify(t *testing.T) {
@@ -28,4 +32,5 @@ func TestVerify(t *testing.T) {
 	//fmt.Printf("User Password expected: %s\n", userpwd)
 	status = Verify("user", "user", userpwd, basis)
 	fmt.Printf("Verification User password %v\n", status)
+
 }

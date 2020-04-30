@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/hex"
 	"log"
 	"os"
 	"path"
@@ -48,9 +49,15 @@ func showConfiguration() {
 // Server provides the service ie runs as a daemon.
 func Server(cmd *cobra.Command, args []string) {
 	log.Println("Starting the service")
+	if verbosityLevel > 0 {
+		showConfiguration()
+	}
+	serve.ProvideService(serverCertFileName, pvtKeyFileName, serverURL, htmlPath)
+}
+
+func loadConfigurations() {
 
 	viper.SetConfigFile(cfgFilename)
-
 	if err := viper.ReadInConfig(); err == nil {
 		log.Println("Using config file:", viper.ConfigFileUsed())
 		serverURL = viper.GetString("server.url")
@@ -63,13 +70,21 @@ func Server(cmd *cobra.Command, args []string) {
 		htmlPath = viper.GetString("server.html")
 		logFilesPath = viper.GetString("server.logfiles")
 		install.InstallDate = viper.GetString("server.installed")
-
+		log.Printf("Installed date set to %s", install.InstallDate)
+		storekey := viper.Get("store.key")
+		if storekey == nil {
+			log.Fatal("No store key found")
+		}
+		storekeystr := viper.GetString("store.key")
+		install.StoreKey, err = hex.DecodeString(storekeystr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Restored store key")
 	}
 	if verbosityLevel > 0 {
 		showConfiguration()
 	}
-	serve.ProvideService(serverCertFileName, pvtKeyFileName, serverURL, htmlPath)
-
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -103,5 +118,5 @@ func initConfig() {
 	if cfgfile != "" {
 		cfgFilename = cfgfile
 	}
-
+	loadConfigurations()
 }

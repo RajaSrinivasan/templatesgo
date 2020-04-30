@@ -56,7 +56,7 @@ func User(cmd *cobra.Command, args []string) {
 	}
 	nowkey := fmt.Sprintf("users.%s", args[0])
 	insttime, _ := time.Parse(time.ANSIC, install.InstallDate)
-
+	log.Printf("Install Date %s", install.InstallDate)
 	switch {
 	case modify_opt:
 		log.Printf("Modify password for user %s", args[0])
@@ -84,8 +84,10 @@ func User(cmd *cobra.Command, args []string) {
 		}
 		nowvalstr := modviper.GetString(nowkey)
 		pwdenc := install.Password(args[0], pwd, insttime)
+		log.Printf("Generating password for %s password %s Got %s", args[0], pwd, pwdenc)
 		if strings.Compare(nowvalstr, pwdenc) != 0 {
 			log.Printf("Passwords do not match")
+			log.Printf("Expecting %s Got %s", nowvalstr, pwdenc)
 		} else {
 			log.Printf("Passwords match")
 		}
