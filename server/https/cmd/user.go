@@ -28,11 +28,13 @@ const minLengthPassword = 4
 
 var modify_opt bool
 var delete_opt bool
+var validate_opt bool
 
 func init() {
 	rootCmd.AddCommand(userCmd)
 	userCmd.PersistentFlags().BoolVarP(&modify_opt, "modify", "m", false, "Modify password of user")
 	userCmd.PersistentFlags().BoolVarP(&delete_opt, "delete", "d", false, "Modify password of user")
+	userCmd.PersistentFlags().BoolVarP(&validate_opt, "validate", "V", false, "Validate user")
 }
 
 func User(cmd *cobra.Command, args []string) {
@@ -73,6 +75,21 @@ func User(cmd *cobra.Command, args []string) {
 			return
 		}
 		modviper.Set(nowkey, "invalid")
+	case validate_opt:
+		log.Printf("Validating user %s", args[0])
+		nowval := modviper.Get(nowkey)
+		if nowval == nil {
+			log.Printf("User %s is not defined", args[0])
+			return
+		}
+		nowvalstr := modviper.GetString(nowkey)
+		pwdenc := install.Password(args[0], pwd, insttime)
+		if strings.Compare(nowvalstr, pwdenc) != 0 {
+			log.Printf("Passwords do not match")
+		} else {
+			log.Printf("Passwords match")
+		}
+		return
 	default:
 		log.Printf("Create a new user %s", args[0])
 		nowval := modviper.Get(nowkey)
