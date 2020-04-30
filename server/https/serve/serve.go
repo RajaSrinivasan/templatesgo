@@ -9,11 +9,17 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"gitlab.com/projtemplates/go/server/version"
 )
 
 var startTime string
 var templates *template.Template
+var store *sessions.CookieStore
+
+var StoreKey []byte
+
+const StoreKeyLength = 128
 
 type Info struct {
 	Title string
@@ -76,9 +82,10 @@ func getGorillaTop(w http.ResponseWriter, r *http.Request) {
 }
 
 func ProvideService(certfn, pvtkeyfn, hostnport string, htmlpath string) {
-	log.Printf("Providing Service using gorilla mux HTTPS")
+
 	startTime = time.Now().Format(time.ANSIC)
 	var err error
+	store = sessions.NewCookieStore(StoreKey)
 	templates, err = template.ParseGlob(htmlpath + "/*")
 	if err != nil {
 		log.Fatal(err)

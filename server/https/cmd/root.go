@@ -76,11 +76,11 @@ func loadConfigurations() {
 			log.Fatal("No store key found")
 		}
 		storekeystr := viper.GetString("store.key")
-		install.StoreKey, err = hex.DecodeString(storekeystr)
+		serve.StoreKey, err = hex.DecodeString(storekeystr)
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("Restored store key")
+		log.Printf("Restored store key. Length %d", len(storekeystr))
 	}
 	if verbosityLevel > 0 {
 		showConfiguration()

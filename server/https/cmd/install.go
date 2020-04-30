@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"gitlab.com/projtemplates/go/server/https/serve"
 	"gitlab.com/projtemplates/go/server/install"
 )
 
@@ -125,7 +126,7 @@ func Install(cmd *cobra.Command, args []string) {
 	userpwdenc := install.Password("user", userpwd, insttime)
 	viper.Set("users.user", userpwdenc)
 
-	storekey := make([]byte, install.StoreKeyLength)
+	storekey := make([]byte, serve.StoreKeyLength)
 	_, err = rand.Read(storekey)
 	if err != nil {
 		log.Fatal(err)
