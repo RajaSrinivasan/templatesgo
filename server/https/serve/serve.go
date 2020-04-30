@@ -38,7 +38,30 @@ type Stats struct {
 	Version     string
 }
 
+func validUser(w http.ResponseWriter, r *http.Request) bool {
+	sess, err := store.Get(r, "topr")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return false
+	}
+	_, ok := sess.Values["validated"]
+	if !ok {
+		log.Printf("Not a validated session")
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return false
+	}
+	return true
+}
+
 func getGorillaStats(w http.ResponseWriter, r *http.Request) {
+
+	v := validUser(w, r)
+	if !v {
+		log.Printf("Not a valid user")
+		return
+	}
+
 	stats := templates.Lookup("stats.html")
 	if stats == nil {
 		log.Printf("Unable to locate stats.html")
@@ -66,7 +89,13 @@ func getGorillaStats(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Served stats")
 }
 
-func getGorillaTop(w http.ResponseWriter, r *http.Request) {
+func getGorillaIndex(w http.ResponseWriter, r *http.Request) {
+
+	v := validUser(w, r)
+	if !v {
+		log.Printf("Not a valid user")
+		return
+	}
 	index := templates.Lookup("index.html")
 	if index == nil {
 		log.Printf("Cannot find index.html")
@@ -79,6 +108,23 @@ func getGorillaTop(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	log.Printf("Served index")
+
+}
+func getGorillaTop(w http.ResponseWriter, r *http.Request) {
+
+	index := templates.Lookup("login.html")
+	if index == nil {
+		log.Printf("Cannot find login.html")
+		w.Write([]byte("login"))
+		return
+	}
+	var info = Info{Title: "TOPR LLC"}
+	err := index.Execute(w, info)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Served login")
+
 }
 
 func ProvideService(certfn, pvtkeyfn, hostnport string, htmlpath string) {
@@ -93,6 +139,7 @@ func ProvideService(certfn, pvtkeyfn, hostnport string, htmlpath string) {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", getGorillaTop)
+	r.HandleFunc("/index", getGorillaIndex)
 	r.HandleFunc("/stats", getGorillaStats)
 
 	http.Handle("/", r)
