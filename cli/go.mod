@@ -1,4 +1,4 @@
-module gitlab.com/RajaSrinivasan/projtemplates/go/cli
+module gitlab.com/projtemplates/go/cli
 
 go 1.13
 
