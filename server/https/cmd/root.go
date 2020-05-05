@@ -69,8 +69,9 @@ func loadConfigurations() {
 		pvtKeyFileName = viper.GetString("server.pvtkey")
 		htmlPath = viper.GetString("server.html")
 		logFilesPath = viper.GetString("server.logfiles")
-		install.InstallDate = viper.GetString("server.installed")
-		log.Printf("Installed date set to %s", install.InstallDate)
+		installdate := viper.GetString("server.installed")
+		install.SetInstallDate(installdate)
+		log.Printf("Installed date set to %s", installdate)
 		storekey := viper.Get("store.key")
 		if storekey == nil {
 			log.Fatal("No store key found")

@@ -61,11 +61,7 @@ func validateLogin(un, pw string, w http.ResponseWriter, r *http.Request) bool {
 	viper.SetConfigFile(sysconfigFilename)
 	usrkey := fmt.Sprintf("users.%s", un)
 	exppwd := viper.GetString(usrkey)
-	tv, err := time.Parse(time.ANSIC, install.InstallDate)
-	if err != nil {
-		log.Printf("Install Time %s cannot be converted \n%s", install.InstallDate, err)
-	}
-	log.Printf("User %s Password %s Encrypted %s. Install Time %s", un, pw, exppwd, install.InstallDate)
+	log.Printf("User %s Password %s Encrypted %s.", un, pw, exppwd)
 	sess, err := store.Get(r, "topr")
 	if err != nil {
 		log.Printf("Unable to create a new session from store.\n%s", err)
@@ -76,7 +72,7 @@ func validateLogin(un, pw string, w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 
-	gotpwd := install.Verify(un, pw, exppwd, tv)
+	gotpwd := install.Verify(un, pw, exppwd)
 	if !gotpwd {
 		log.Printf("Password did not verify. Invalidating session")
 		sess.Values["validated"] = false

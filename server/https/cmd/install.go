@@ -77,7 +77,9 @@ func Install(cmd *cobra.Command, args []string) {
 		log.Fatal("Creating Dir", err)
 	}
 	insttime := time.Now()
-	viper.Set("server.installed", insttime.Format(time.ANSIC))
+	reftime := insttime.Format(time.ANSIC)
+	viper.Set("server.installed", reftime)
+	install.SetInstallDate(reftime)
 	viper.Set("server.toplevel", serverDir)
 
 	err = os.MkdirAll(path.Join(serverDir, "etc"), os.ModePerm)
@@ -121,9 +123,9 @@ func Install(cmd *cobra.Command, args []string) {
 
 	adminpwd := install.Ask("Admin Password (username: admin)", "admin")
 	userpwd := install.Ask("User Password (username: user)", "user")
-	adminpwdenc := install.Password("admin", adminpwd, insttime)
+	adminpwdenc := install.Password("admin", adminpwd)
 	viper.Set("users.admin", adminpwdenc)
-	userpwdenc := install.Password("user", userpwd, insttime)
+	userpwdenc := install.Password("user", userpwd)
 	viper.Set("users.user", userpwdenc)
 
 	storekey := make([]byte, serve.StoreKeyLength)

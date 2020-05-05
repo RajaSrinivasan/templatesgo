@@ -12,6 +12,8 @@ import (
 	"github.com/RajaSrinivasan/rollpwd/salt"
 )
 
+var reftime time.Time
+
 func generate(t time.Time, nm string, pwd string) string {
 
 	layout := "2006-01-02 15"
@@ -28,16 +30,20 @@ func generate(t time.Time, nm string, pwd string) string {
 	return pwdstr
 }
 
-func Password(nm, pwd string, insttime time.Time) string {
-	userpwd := generate(insttime, nm, pwd)
+func SetInstallDate(insdate string) {
+	reftime, _ = time.Parse(time.ANSIC, insdate)
+}
+
+func Password(nm, pwd string) string {
+	userpwd := generate(reftime, nm, pwd)
 	return userpwd
 }
 
-func Verify(nm, pwd string, pwdexp string, instime time.Time) bool {
+func Verify(nm, pwd string, pwdexp string) bool {
 
-	pwdenc := generate(instime, nm, pwd)
+	pwdenc := generate(reftime, nm, pwd)
 	fmt.Printf("User %s Password supplied %s computed %s\n", nm, pwdexp, pwdenc)
-	timebasis := instime.Format(time.ANSIC)
+	timebasis := reftime.Format(time.ANSIC)
 	log.Printf("Time basis %s", timebasis)
 	if strings.Compare(pwdenc, pwdexp) != 0 {
 		return false

@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-var InstallDate string
-
 func makeTemplate() x509.Certificate {
 
 	notBefore := time.Now()

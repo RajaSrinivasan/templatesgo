@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -55,8 +54,6 @@ func User(cmd *cobra.Command, args []string) {
 		}
 	}
 	nowkey := fmt.Sprintf("users.%s", args[0])
-	insttime, _ := time.Parse(time.ANSIC, install.InstallDate)
-	log.Printf("Install Date %s", install.InstallDate)
 	switch {
 	case modify_opt:
 		log.Printf("Modify password for user %s", args[0])
@@ -65,7 +62,7 @@ func User(cmd *cobra.Command, args []string) {
 			log.Printf("User %s is not defined", args[0])
 			return
 		}
-		newpwd := install.Password(args[0], pwd, insttime)
+		newpwd := install.Password(args[0], pwd)
 		modviper.Set(nowkey, newpwd)
 	case delete_opt:
 		log.Printf("Deleting user %s", args[0])
@@ -83,7 +80,7 @@ func User(cmd *cobra.Command, args []string) {
 			return
 		}
 		nowvalstr := modviper.GetString(nowkey)
-		pwdenc := install.Password(args[0], pwd, insttime)
+		pwdenc := install.Password(args[0], pwd)
 		log.Printf("Generating password for %s password %s Got %s", args[0], pwd, pwdenc)
 		if strings.Compare(nowvalstr, pwdenc) != 0 {
 			log.Printf("Passwords do not match")
@@ -101,7 +98,7 @@ func User(cmd *cobra.Command, args []string) {
 				return
 			}
 		}
-		newpwd := install.Password(args[0], pwd, insttime)
+		newpwd := install.Password(args[0], pwd)
 		modviper.Set(nowkey, newpwd)
 	}
 	err := modviper.WriteConfigAs(cfgFilename)
