@@ -3,7 +3,9 @@ package install
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"io"
+	"log"
 	"strings"
 	"time"
 
@@ -32,8 +34,11 @@ func Password(nm, pwd string, insttime time.Time) string {
 }
 
 func Verify(nm, pwd string, pwdexp string, instime time.Time) bool {
+
 	pwdenc := generate(instime, nm, pwd)
-	// fmt.Printf("User %s Password %s\n", nm, pwdenc)
+	fmt.Printf("User %s Password supplied %s computed %s\n", nm, pwdexp, pwdenc)
+	timebasis := instime.Format(time.ANSIC)
+	log.Printf("Time basis %s", timebasis)
 	if strings.Compare(pwdenc, pwdexp) != 0 {
 		return false
 	}

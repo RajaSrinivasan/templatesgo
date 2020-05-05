@@ -10,16 +10,19 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/spf13/viper"
+	"gitlab.com/projtemplates/go/server/install"
 	"gitlab.com/projtemplates/go/server/version"
 )
 
 var startTime string
 var templates *template.Template
 var store *sessions.CookieStore
+var sysconfigFilename string
 
 var StoreKey []byte
 
-const StoreKeyLength = 128
+const StoreKeyLength = 32
 
 type Info struct {
 	Title string
@@ -54,7 +57,40 @@ func validUser(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-func getGorillaStats(w http.ResponseWriter, r *http.Request) {
+func validateLogin(un, pw string, w http.ResponseWriter, r *http.Request) bool {
+	viper.SetConfigFile(sysconfigFilename)
+	usrkey := fmt.Sprintf("users.%s", un)
+	exppwd := viper.GetString(usrkey)
+	tv, err := time.Parse(time.ANSIC, install.InstallDate)
+	if err != nil {
+		log.Printf("Install Time %s cannot be converted \n%s", install.InstallDate, err)
+	}
+	log.Printf("User %s Password %s Encrypted %s. Install Time %s", un, pw, exppwd, install.InstallDate)
+	sess, err := store.Get(r, "topr")
+	if err != nil {
+		log.Printf("Unable to create a new session from store.\n%s", err)
+		sess, err = store.New(r, "topr")
+		if err != nil {
+			log.Printf("Even recreating session failed")
+		}
+		return false
+	}
+
+	gotpwd := install.Verify(un, pw, exppwd, tv)
+	if !gotpwd {
+		log.Printf("Password did not verify. Invalidating session")
+		sess.Values["validated"] = false
+		err = sess.Save(r, w)
+		return false
+	}
+	log.Printf("Password verified. Validating session")
+
+	sess.Values["validated"] = true
+	err = sess.Save(r, w)
+	return true
+}
+
+func getStats(w http.ResponseWriter, r *http.Request) {
 
 	v := validUser(w, r)
 	if !v {
@@ -89,7 +125,7 @@ func getGorillaStats(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Served stats")
 }
 
-func getGorillaIndex(w http.ResponseWriter, r *http.Request) {
+func getIndex(w http.ResponseWriter, r *http.Request) {
 
 	v := validUser(w, r)
 	if !v {
@@ -110,7 +146,7 @@ func getGorillaIndex(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Served index")
 
 }
-func getGorillaTop(w http.ResponseWriter, r *http.Request) {
+func getTop(w http.ResponseWriter, r *http.Request) {
 
 	index := templates.Lookup("login.html")
 	if index == nil {
@@ -127,20 +163,49 @@ func getGorillaTop(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func ProvideService(certfn, pvtkeyfn, hostnport string, htmlpath string) {
+func doLogin(w http.ResponseWriter, r *http.Request) {
+
+	if err := r.ParseForm(); err != nil {
+		log.Printf("Form parse error %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var un, pw string
+	un = r.FormValue("username")
+	pw = r.FormValue("password")
+	log.Printf("Attempts to login from %s with password %s", un, pw)
+	vlstat := validateLogin(un, pw, w, r)
+	if !vlstat {
+		log.Printf("Validation of Login failed")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	//http.Redirect(w, r, "/index", http.StatusAccepted)
+	getIndex(w, r)
+	log.Printf("Served login")
+
+}
+
+func ProvideService(certfn, pvtkeyfn, hostnport string, htmlpath string, cfgfilename string) {
+
+	sysconfigFilename = cfgfilename
 
 	startTime = time.Now().Format(time.ANSIC)
 	var err error
 	store = sessions.NewCookieStore(StoreKey)
+	store.MaxAge(0)
 	templates, err = template.ParseGlob(htmlpath + "/*")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", getGorillaTop)
-	r.HandleFunc("/index", getGorillaIndex)
-	r.HandleFunc("/stats", getGorillaStats)
+	r.HandleFunc("/", getTop)
+	r.HandleFunc("/index", getIndex)
+	r.HandleFunc("/stats", getStats)
+
+	r.HandleFunc("/a/login", doLogin)
 
 	http.Handle("/", r)
 

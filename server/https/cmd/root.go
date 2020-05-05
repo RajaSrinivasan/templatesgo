@@ -52,7 +52,7 @@ func Server(cmd *cobra.Command, args []string) {
 	if verbosityLevel > 0 {
 		showConfiguration()
 	}
-	serve.ProvideService(serverCertFileName, pvtKeyFileName, serverURL, htmlPath)
+	serve.ProvideService(serverCertFileName, pvtKeyFileName, serverURL, htmlPath, cfgFilename)
 }
 
 func loadConfigurations() {
