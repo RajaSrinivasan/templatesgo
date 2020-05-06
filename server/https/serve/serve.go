@@ -67,6 +67,7 @@ func validUser(w http.ResponseWriter, r *http.Request) bool {
 		if expired {
 			log.Printf("Session Validity has expired. Will force a relogin")
 			log.Printf("%s %s", reftime.Format(time.RFC822), exptimeval.Format(time.RFC822))
+			return false
 		}
 	} else {
 		log.Printf("Unable to determine session expiry time")
@@ -125,6 +126,7 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 	v := validUser(w, r)
 	if !v {
 		log.Printf("Not a valid user")
+		invalidateSession(w, r)
 		return
 	}
 	renewSession(w, r)
@@ -155,11 +157,23 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Served stats")
 }
 
+func invalidateSession(w http.ResponseWriter, r *http.Request) {
+	sess, err := store.Get(r, "topr")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	sess.Values["validated"] = false
+	err = sess.Save(r, w)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 func getIndex(w http.ResponseWriter, r *http.Request) {
 
 	v := validUser(w, r)
 	if !v {
 		log.Printf("Not a valid user")
+		invalidateSession(w, r)
 		return
 	}
 	renewSession(w, r)
