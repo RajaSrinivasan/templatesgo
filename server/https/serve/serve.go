@@ -50,9 +50,26 @@ func validUser(w http.ResponseWriter, r *http.Request) bool {
 	_, ok := sess.Values["validated"]
 	if !ok {
 		log.Printf("Not a validated session")
-
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return false
+	}
+	exptime, ok := sess.Values["expirytime"]
+	if ok {
+		log.Printf("Session Expiry %s", exptime)
+		exptimeval, err := time.Parse(time.RFC822, exptime.(string))
+		if err != nil {
+			log.Printf("Error converting expiry time %s", err)
+		}
+		//exptimeval = exptimeval.Local()
+		reftime := time.Now().Local()
+		expired := reftime.After(exptimeval)
+		log.Printf("%s %s", reftime.Format(time.RFC822), exptimeval.Format(time.RFC822))
+		if expired {
+			log.Printf("Session Validity has expired. Will force a relogin")
+			log.Printf("%s %s", reftime.Format(time.RFC822), exptimeval.Format(time.RFC822))
+		}
+	} else {
+		log.Printf("Unable to determine session expiry time")
 	}
 	return true
 }
@@ -80,10 +97,27 @@ func validateLogin(un, pw string, w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 	log.Printf("Password verified. Validating session")
-
+	timenow := time.Now().Local()
+	exptime := timenow.Add(time.Hour * 1)
+	exptimestr := exptime.Format(time.RFC822)
 	sess.Values["validated"] = true
+	sess.Values["expirytime"] = exptimestr
 	err = sess.Save(r, w)
 	return true
+}
+
+func renewSession(w http.ResponseWriter, r *http.Request) {
+	sess, err := store.Get(r, "topr")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	timenow := time.Now().Local()
+	exptime := timenow.Add(time.Hour * 1)
+	exptimestr := exptime.Format(time.RFC822)
+	sess.Values["expirytime"] = exptimestr
+	sess.Values["validated"] = true
+	err = sess.Save(r, w)
 }
 
 func getStats(w http.ResponseWriter, r *http.Request) {
@@ -93,14 +127,14 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Not a valid user")
 		return
 	}
-
+	renewSession(w, r)
 	stats := templates.Lookup("stats.html")
 	if stats == nil {
 		log.Printf("Unable to locate stats.html")
 		w.Write([]byte("Stats"))
 		return
 	}
-	timenow := time.Now().Format(time.ANSIC)
+	timenow := time.Now().Format(time.RFC822)
 	hostname, _ := os.Hostname()
 	var st = Stats{
 		TimeStart:   startTime,
@@ -128,6 +162,8 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Not a valid user")
 		return
 	}
+	renewSession(w, r)
+
 	index := templates.Lookup("index.html")
 	if index == nil {
 		log.Printf("Cannot find index.html")
@@ -177,7 +213,6 @@ func doLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//http.Redirect(w, r, "/index", http.StatusAccepted)
 	getIndex(w, r)
 	log.Printf("Served login")
 
@@ -187,7 +222,7 @@ func ProvideService(certfn, pvtkeyfn, hostnport string, htmlpath string, cfgfile
 
 	sysconfigFilename = cfgfilename
 
-	startTime = time.Now().Format(time.ANSIC)
+	startTime = time.Now().Format(time.RFC822)
 	var err error
 	store = sessions.NewCookieStore(StoreKey)
 	store.MaxAge(0)
@@ -211,4 +246,25 @@ func ProvideService(certfn, pvtkeyfn, hostnport string, htmlpath string, cfgfile
 		pvtkeyfn+".pvt.pem",
 		r)
 	log.Fatal(err)
+}
+
+func timeCompare() {
+	year2000 := time.Date(2000, 1, 1, 0, 0, 0, 0, time.Local)
+	year3000 := time.Date(3000, 1, 1, 0, 0, 0, 0, time.Local)
+
+	isYear2000BeforeYear3000 := year2000.Before(year3000) // True
+	isYear3000BeforeYear2000 := year3000.Before(year2000) // False
+
+	timenow := time.Now().Local()
+	b1 := timenow.After(year2000)
+	b2 := timenow.After(year3000)
+	fmt.Printf("b1 %v b2 %v\n", b1, b2)
+
+	reftime, _ := time.Parse(time.RFC822, "Tue May  5 18:19:04 2020")
+	b1 = timenow.After(reftime.Local())
+	b2 = timenow.Before(reftime.Local())
+	fmt.Printf("After %v Before %v\n", b1, b2)
+	fmt.Printf("year2000.Before(year3000) = %v\n", isYear2000BeforeYear3000)
+	fmt.Printf("year3000.Before(year2000) = %v\n", isYear3000BeforeYear2000)
+
 }
